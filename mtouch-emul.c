@@ -58,10 +58,29 @@ int main(void)
 	if (ioctl(fd, UI_SET_ABSBIT, ABS_Y) < 0)
 		die("error: ioctl");
 
+#if 0
 	for (i = ABS_MT_SLOT; i < ABS_MAX; i++) {
 		if (ioctl(fd, UI_SET_ABSBIT, i) < 0)
 			die("error: ioctl");
 	}
+#endif
+
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_X) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_Y) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_TOUCH_MINOR) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_TOUCH_MAJOR) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_WIDTH_MINOR) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_WIDTH_MAJOR) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_ORIENTATION) < 0)
+		die("error: ioctl");
+	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_PRESSURE) < 0)
+		die("error: ioctl");
 
 	memset(&uidev, 0, sizeof(uidev));
 	snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "mtouch-emul");
@@ -69,6 +88,20 @@ int main(void)
 	uidev.id.vendor = 0x1;
 	uidev.id.product = 0x1;
 	uidev.id.version = 1;
+
+	uidev.absmax[ABS_X] = 3200;
+	uidev.absmax[ABS_Y] = 3200;
+	uidev.absmax[ABS_PRESSURE] = 255;
+
+	uidev.absmax[ABS_MT_POSITION_X] = 3200;
+	uidev.absmax[ABS_MT_POSITION_Y] = 3200;
+	uidev.absmax[ABS_MT_TOUCH_MINOR] = 3200;
+	uidev.absmax[ABS_MT_TOUCH_MAJOR] = 3200;
+	uidev.absmax[ABS_MT_WIDTH_MINOR] = 3200;
+	uidev.absmax[ABS_MT_WIDTH_MAJOR] = 3200;
+	uidev.absmax[ABS_MT_ORIENTATION] = 180;
+	uidev.absmin[ABS_MT_ORIENTATION] = -180;
+	uidev.absmax[ABS_MT_PRESSURE] = 255;
 
 	if (write(fd, &uidev, sizeof(uidev)) < 0)
 		die("error: write");
