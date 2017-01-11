@@ -1,1 +1,1 @@
-adb exec-out cat /dev/input/event1 | ./mtouch-emul
+adb exec-out cat /dev/input/event0 | ./mtouch-emul

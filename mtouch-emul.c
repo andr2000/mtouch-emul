@@ -12,15 +12,35 @@
 	exit(EXIT_FAILURE); \
 } while(0)
 
-char *events[EV_MAX + 1] = {
-	[0 ... EV_MAX] = NULL,
-	[EV_SYN] = "Sync",			[EV_KEY] = "Key",
-	[EV_REL] = "Relative",			[EV_ABS] = "Absolute",
-	[EV_MSC] = "Misc",			[EV_LED] = "LED",
-	[EV_SND] = "Sound",			[EV_REP] = "Repeat",
-	[EV_FF] = "ForceFeedback",		[EV_PWR] = "Power",
-	[EV_FF_STATUS] = "ForceFeedbackStatus",
+const int set_evbit[] = {
+	EV_ABS,
+	EV_KEY,
+	EV_SYN,
 };
+
+const int set_keybit[] = {
+	BTN_TOUCH,
+};
+
+const int set_absbit[] = {
+	ABS_X,
+	ABS_Y,
+	ABS_MT_POSITION_X,
+	ABS_MT_POSITION_Y,
+	ABS_MT_TOUCH_MINOR,
+	ABS_MT_TOUCH_MAJOR,
+	ABS_MT_WIDTH_MINOR,
+	ABS_MT_WIDTH_MAJOR,
+	ABS_MT_ORIENTATION,
+	ABS_MT_PRESSURE,
+	ABS_MT_SLOT,
+	ABS_MT_TRACKING_ID,
+};
+
+#define WIDTH	1920
+#define HEIGHT	1080
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 int main(void)
 {
@@ -32,55 +52,23 @@ int main(void)
 
 	fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 	if (fd < 0)
-		die("error: open");
+		die("error: open uinput");
 
 	fd_stdin = freopen(NULL, "r+b", stdin);
 	if (!fd_stdin)
-		die("error: open");
+		die("error: open stdin");
 
-	if (ioctl(fd, UI_SET_EVBIT, EV_ABS) < 0)
-		die("error: ioctl");
-
-	if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0)
-		die("error: ioctl");
-
-	if (ioctl(fd, UI_SET_EVBIT, EV_REL) < 0)
-		die("error: ioctl");
-
-	if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0)
-		die("error: ioctl");
-
-	if (ioctl(fd, UI_SET_KEYBIT, BTN_TOUCH) < 0)
-		die("error: ioctl");
-
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_X) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_Y) < 0)
-		die("error: ioctl");
-
-#if 0
-	for (i = ABS_MT_SLOT; i < ABS_MAX; i++) {
-		if (ioctl(fd, UI_SET_ABSBIT, i) < 0)
+	for (i = 0; i < ARRAY_SIZE(set_evbit); i++)
+		if (ioctl(fd, UI_SET_EVBIT, set_evbit[i]) < 0)
 			die("error: ioctl");
-	}
-#endif
 
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_X) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_Y) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_TOUCH_MINOR) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_TOUCH_MAJOR) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_WIDTH_MINOR) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_WIDTH_MAJOR) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_ORIENTATION) < 0)
-		die("error: ioctl");
-	if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_PRESSURE) < 0)
-		die("error: ioctl");
+	for (i = 0; i < ARRAY_SIZE(set_keybit); i++)
+		if (ioctl(fd, UI_SET_KEYBIT, set_keybit[i]) < 0)
+			die("error: ioctl");
+
+	for (i = 0; i < ARRAY_SIZE(set_absbit); i++)
+		if (ioctl(fd, UI_SET_ABSBIT, set_absbit[i]) < 0)
+			die("error: ioctl");
 
 	memset(&uidev, 0, sizeof(uidev));
 	snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "mtouch-emul");
@@ -89,25 +77,27 @@ int main(void)
 	uidev.id.product = 0x1;
 	uidev.id.version = 1;
 
-	uidev.absmax[ABS_X] = 3200;
-	uidev.absmax[ABS_Y] = 3200;
+	uidev.absmax[ABS_X] = WIDTH;
+	uidev.absmax[ABS_Y] = HEIGHT;
 	uidev.absmax[ABS_PRESSURE] = 255;
 
-	uidev.absmax[ABS_MT_POSITION_X] = 3200;
-	uidev.absmax[ABS_MT_POSITION_Y] = 3200;
-	uidev.absmax[ABS_MT_TOUCH_MINOR] = 3200;
-	uidev.absmax[ABS_MT_TOUCH_MAJOR] = 3200;
-	uidev.absmax[ABS_MT_WIDTH_MINOR] = 3200;
-	uidev.absmax[ABS_MT_WIDTH_MAJOR] = 3200;
+	uidev.absmax[ABS_MT_POSITION_X] = WIDTH;
+	uidev.absmax[ABS_MT_POSITION_Y] = HEIGHT;
+	uidev.absmax[ABS_MT_TOUCH_MINOR] = WIDTH;
+	uidev.absmax[ABS_MT_TOUCH_MAJOR] = WIDTH;
+	uidev.absmax[ABS_MT_WIDTH_MINOR] = WIDTH;
+	uidev.absmax[ABS_MT_WIDTH_MAJOR] = WIDTH;
 	uidev.absmax[ABS_MT_ORIENTATION] = 180;
 	uidev.absmin[ABS_MT_ORIENTATION] = -180;
 	uidev.absmax[ABS_MT_PRESSURE] = 255;
+	uidev.absmax[ABS_MT_SLOT] = 10;
+	uidev.absmax[ABS_MT_TRACKING_ID] = 0xffff;
 
 	if (write(fd, &uidev, sizeof(uidev)) < 0)
 		die("error: write");
 
 	if (ioctl(fd, UI_DEV_CREATE) < 0)
-		die("error: ioctl");
+		die("error: UI_DEV_CREATE");
 
 	while (1) {
 		struct input_event ev;
@@ -122,17 +112,15 @@ int main(void)
 			ptr += rd;
 		} while (to_read);
 
-#if 0
-		printf("Got event type %x code %x value %x\n",
-			ev.type, ev.code, ev.value);
-#endif
+		printf("Report type %u code %u\n", ev.type, ev.code);
+
 		if (write(fd, &ev, sizeof(ev)) < 0)
 			die("error: write");
 
 	}
 
 	if (ioctl(fd, UI_DEV_DESTROY) < 0)
-		die("error: ioctl");
+		die("error: UI_DEV_DESTROY");
 
 	close(fd);
 	fclose(fd_stdin);
