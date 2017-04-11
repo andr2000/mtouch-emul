@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <stdint.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
 
@@ -41,6 +42,18 @@ const int set_absbit[] = {
 #define HEIGHT	1080
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+struct timeval32 {
+	uint32_t tv_sec;         /* seconds */
+	uint32_t tv_usec;        /* microseconds */
+};
+
+struct input_event32 {
+	struct timeval32 time;
+	uint16_t type;
+	uint16_t code;
+	int32_t  value;
+};
 
 int main(void)
 {
@@ -100,7 +113,8 @@ int main(void)
 		die("error: UI_DEV_CREATE");
 
 	while (1) {
-		struct input_event ev;
+		struct input_event32 ev;
+		struct input_event ev_inj;
 		char *ptr;
 		int to_read, rd;
 
@@ -114,7 +128,14 @@ int main(void)
 
 		printf("Report type %u code %u\n", ev.type, ev.code);
 
-		if (write(fd, &ev, sizeof(ev)) < 0)
+		/* tablet is 32-bit, host is 64-bit */
+		ev_inj.time.tv_sec = ev.time.tv_sec;
+		ev_inj.time.tv_usec = ev.time.tv_usec;
+		ev_inj.type = ev.type;
+		ev_inj.code = ev.code;
+		ev_inj.value = ev.value;
+
+		if (write(fd, &ev_inj, sizeof(ev_inj)) < 0)
 			die("error: write");
 
 	}
