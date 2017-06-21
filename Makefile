@@ -1,2 +1,2 @@
 all:
-	gcc -m32 -o mtouch-emul mtouch-emul.c
+	${CC} -o mtouch-emul mtouch-emul.c
